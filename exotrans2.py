@@ -2,16 +2,16 @@ import serial as sr
 import time
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter1d
-from scipy.signal import savgol_filter
+#from scipy.ndimage.filters import gaussian_filter1d
+#from scipy.signal import savgol_filter
 import liveplot as lp
 
 s = sr.Serial('/dev/ttyACM0', 9600);       # Change the serial port according to device
 start = time.time()
 plt.close('all');
-plt.figure();
-plt.ion();
-plt.show();
+# plt.figure();
+# plt.ion();
+# plt.show();
 
 data = np.array([]);
 
