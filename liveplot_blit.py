@@ -12,25 +12,53 @@ import time
 import serial as sr
 from matplotlib import pyplot as plt
 import numpy as np
+
 # plt.style.use('ggplot')               # Select your favourite plot style. or don't
 SERIAL_PORT = '/dev/ttyACM0'            # Enter Serial port name
-s = sr.Serial(SERIAL_PORT, 9600)
+CALIB_TIME = 10                         # Wait CALIB seconds to figure out y axis lims to use for graph
 
 
-def graph_live_blit(blit=False):
+def calibrate_lims(s_port, calib_time=5):
+    """
+    returns upper and lower Y axis lims for graphs after 5 seconds of data
+    :param s_port: serial port that gives data
+    :param calib_time: time allocated for calib in seconds
+    :return: list containing [Y_lower_limit, Y_upper_limit]
+    """
+    time_elapsed = 0
+    time_start = time.time()
+    y_max = 30
+    y_min = 20
+    while time_elapsed <= calib_time:
+        curr_time = time.time()
+        time_elapsed = curr_time - time_start
+        a = s_port.readline()
+        a.decode()
+        if a == b'\r\n' or a == b'\n':               # To handle null values received without dying
+            continue
+        # print('a = ', a);
+        b = float(a[0:4])
+        y_max = max(b, y_max)
+        y_min = min(b, y_min)
+    return [y_min*0.8, y_max*1.3]
+
+
+def graph_live_blit(s_port, blit=False):
     """
     If blit is true, uses bliting to generate graphs faster. Otherwise generate traditional live plot
     :param blit: Boolean. True if bliting is desired
+    :param s_port: serial port that gives data
     :return: Draws matplotlib graphs in figure window
     """
-    SIZE = 300                          # Number of data points to show in graph
-    x = np.linspace(0, 1, SIZE+1)[0:-1]
+    graph_y_lims = calibrate_lims(s_port, CALIB_TIME)   # Wait CALIB seconds to figure out y axis lims to use for graph
+    x_size = 300                          # Number of data points to show in graph
+    x = np.linspace(0, 1, x_size+1)[0:-1]
     y_vec = np.zeros(len(x))
     fig = plt.figure()
     ax2 = fig.add_subplot(1, 1, 1)
     line, = ax2.plot([], lw=3)
-    ax2.set_xlim(x.min(), x.max())
-    ax2.set_ylim([0, 40])               # Set ylims here. blit graph cannot change limits
+    ax2.set_xlim(x.min(), x.max()-2/x_size)
+    ax2.set_ylim(graph_y_lims)          # Set ylims here. blit graph cannot change limits dynamically
     fig.canvas.draw()                   # Draw the first graph even without data
     if blit:
         # cache the background
@@ -39,7 +67,7 @@ def graph_live_blit(blit=False):
     t_start = time.time()
     while True:
 
-        a = s.readline()
+        a = s_port.readline()
         a.decode()
         if a == b'\r\n' or a == b'\n':               # To handle null values received without dying
             continue
@@ -62,6 +90,7 @@ def graph_live_blit(blit=False):
     print("Time Elapsed: ", t_end-t_start)
 
 
-graph_live_blit(True)
+s = sr.Serial(SERIAL_PORT, 9600)
+graph_live_blit(s, True)
 
-s.close()       # Close the serial port like an upstanding citizen
+s.close()       # Close the serial port like a good upstanding citizen
