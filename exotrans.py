@@ -20,9 +20,11 @@ i = 0
 while True:	
 	try:           
 		a = s.readline()
-		a.decode();
-		if a ==  b'\r\n':                        # To handle null value recieved
-			#print("Got Blank!")
+		try:
+			a.decode()
+		except UnicodeDecodeError:
+			continue
+		if a == b'\r\n' or a == b'\n':  # To handle null values received without dying
 			continue
 		print('a = ', a);
 		b = float(a[0:4]);
@@ -37,8 +39,8 @@ while True:
 		plt.ylabel('Intensity (/Lux)');
 		y_fil = data
 		#y_fil = gaussian_filter1d(data, sigma=1)
-		#y_fil = savgol_filter(data, 3, 1, mode='nearest')
-		plt.plot(10*y_fil, color = "brown", marker = 'o', linewidth = "1")
+		y_fil = savgol_filter(data, 3, 1, mode='nearest')
+		plt.plot(10*y_fil, color = "brown", linewidth = "1")
 		plt.pause(0.001);
 		i = i+1
 	except KeyboardInterrupt:

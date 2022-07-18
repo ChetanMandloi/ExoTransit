@@ -28,8 +28,8 @@ while True:
 			#print("Got Blank!")
 			continue
 		#print('a = ', a);
-		b = float(a[0:4]);
-		#print('b = ' , b)
+		b = float(a[0:5]);
+		print('b = ' , b)
 		y_vec[-1] = b
 		plot_line = lp.live_plot(x_vec,y_vec,plot_line)
 		y_vec = np.append(y_vec[1:],0.0)
